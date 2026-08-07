@@ -1,0 +1,36 @@
+{
+    //自动删除未使用的 import，保持代码整洁。
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    // // 自动删除未使用的 import
+    // "java.saveActions.organizeImports": true,
+    // 保存时自动格式化
+    "editor.formatOnSave": true,
+    // 保存 Go 文件时使用 Go 扩展提供的格式化器。
+    // "[go]": {
+    //     "editor.defaultFormatter": "golang.go"
+    // },
+    // 最小化保存改动,减少与 VCS 无关的大面积改动
+    "editor.formatOnSaveMode": "modificationsIfAvailable",
+    // 显示不折行（仅控制显示，不影响格式化）。
+    "editor.wordWrap": "off",
+    // 在短延迟后自动保存，促使 Java 测试发现尽快刷新。
+    "files.autoSave": "afterDelay",
+    // 将自动保存延迟压低到接近实时，但仍保留基本编辑缓冲。
+    "files.autoSaveDelay": 300,
+    // 保持 Java 自动构建开启，保存后尽快触发语言服务与测试刷新。
+    "java.autobuild.enabled": true,
+    // 启用自动构建配置更新，确保项目依赖和编译设置始终与构建工具（如 Maven/Gradle）保持同步。
+    "java.configuration.updateBuildConfiguration": "automatic",
+    // 启用自动空值分析，帮助开发者在编译阶段发现潜在的 NullPointerException 问题。
+    "java.compile.nullAnalysis.mode": "automatic",
+    // 使用自定义格式化配置，确保团队代码风格一致。
+    "java.format.settings.url": ".vscode/eclipse-java-formatter.xml",
+    // 使用自定义格式化配置，确保团队代码风格一致。
+    "java.format.settings.profile": "CloudAPI-NoWrap",
+    // 导入优化：当导入同一包的类数量超过阈值时，使用星号导入。
+    "java.sources.organizeImports.starThreshold": 5,
+    // 静态导入优化：当导入同一类的静态成员数量超过阈值时，使用星号导入。
+    "java.sources.organizeImports.staticStarThreshold": 2
+}
