@@ -1,58 +1,38 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 )
 
-type fetchResult struct {
-	url string
-	msg string
-}
-
-// fetch 负责请求一个网址，并把结果通过通道发回主流程。
-func fetch(url string, resultCh chan fetchResult) {
-	fmt.Println("请求", url)
-
-	// 给每个请求加超时，避免某个网址一直卡住。
-	client := http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Get(url)
-	if err != nil {
-		// 请求失败时，把错误信息发回主流程。
-		resultCh <- fetchResult{
-			url: url,
-			msg: fmt.Sprintf("请求失败: %v", err),
-		}
-		return
-	}
-	defer resp.Body.Close()
-
-	// 请求成功时，把状态码发回主流程。
-	resultCh <- fetchResult{
-		url: url,
-		msg: fmt.Sprintf("状态码: %d", resp.StatusCode),
-	}
+type APIResponse struct {
+	UserID    int    `json:"userId"`
+	Id        int    `json:"id"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
 }
 
 func main() {
-	// 准备要并发请求的网址列表。
-	urls := []string{
-		"https://example.com",
-		"https://golang.org",
+	client := http.Client{Timeout: 5 * time.Second}                         // 设置超时
+	resp, err := client.Get("https://jsonplaceholder.typicode.com/todos/1") // 发起请求
+	if err != nil {
+		fmt.Println("请求失败:", err) // 请求失败直接返回
+		return
+	}
+	defer resp.Body.Close() // 关闭响应体
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("请求失败, 状态码:", resp.StatusCode) // 状态码不为 200，直接返回
+		return
+	}
+	var result APIResponse                           // 用于接收解析后的 JSON
+	err = json.NewDecoder(resp.Body).Decode(&result) // 从响应体直接解码
+	if err != nil {
+		fmt.Println("JSON 解析失败:", err) // 解析失败直接返回
+		return
 	}
 
-	// 用通道统一接收每个 goroutine 返回的结果。
-	resultCh := make(chan fetchResult)
-
-	for _, url := range urls {
-		// 每个网址启动一个 goroutine，这样多个请求可以同时进行。
-		go fetch(url, resultCh)
-	}
-
-	fmt.Println("按完成顺序输出:")
-	for range urls {
-		result := <-resultCh
-		fmt.Printf("%s 请求结果: %s\n", result.url, result.msg)
-	}
+	fmt.Printf("请求成功(%d), UserID: %d, Id: %d, Title: %s, Completed: %t\n", resp.StatusCode, result.UserID, result.Id, result.Title, result.Completed) // 打印字段
 }
