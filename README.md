@@ -48,15 +48,17 @@
 - HTTP 服务端基础
 - 网络日志记录
 
-### 第 4 步：项目实战模板
+### 第 4 步：日志与项目实战
 
-[documents/04.Go日志与项目实战模板.md](documents/04.Go日志与项目实战模板.md)
+[documents/04.Go日志.md](documents/04.Go日志.md)
+
+[documents/05.Go项目实战模板.md](documents/05.Go项目实战模板.md)
 
 把前面学过的内容组织成更像真实项目的结构，重点包括：
 
 - 目录结构怎么拆
+- 包和模块怎么管理
 - 配置怎么管理
-- 日志怎么统一初始化
 - HTTP 客户端怎么封装
 - 并发任务怎么组织
 - `main.go` 怎么保持清晰
@@ -66,7 +68,8 @@
 1. 先看 [documents/01.Go语言基础入门教程.md](documents/01.Go语言基础入门教程.md)，建立语法和基础概念。
 2. 再看 [documents/02.Go并发专题入门.md](documents/02.Go并发专题入门.md)，把 goroutine、channel、select 彻底看明白。
 3. 接着看 [documents/03.Go网络编程入门.md](documents/03.Go网络编程入门.md)，把 HTTP、JSON、超时和并发请求串起来。
-4. 最后看 [documents/04.Go日志与项目实战模板.md](documents/04.Go日志与项目实战模板.md)，学习怎么把这些知识组织成小项目。
+4. 先看 [documents/04.Go日志.md](documents/04.Go日志.md)，把日志基础和轮转示例理顺。
+5. 再看 [documents/05.Go项目实战模板.md](documents/05.Go项目实战模板.md)，学习怎么把这些知识组织成小项目。
 
 ## 不同目标的读法
 
@@ -91,7 +94,8 @@
 
 1. [documents/01.Go语言基础入门教程.md](documents/01.Go语言基础入门教程.md)
 2. [documents/03.Go网络编程入门.md](documents/03.Go网络编程入门.md)
-3. [documents/04.Go日志与项目实战模板.md](documents/04.Go日志与项目实战模板.md)
+3. [documents/04.Go日志.md](documents/04.Go日志.md)
+4. [documents/05.Go项目实战模板.md](documents/05.Go项目实战模板.md)
 
 ## 目录说明
 
