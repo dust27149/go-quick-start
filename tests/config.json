@@ -1,0 +1,6 @@
+{
+    "log": {
+        "dirName": "logs",
+        "fileName": "app.log"
+    }
+}
