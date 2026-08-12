@@ -11,8 +11,10 @@ type Config struct {
 }
 
 type LogConfig struct {
-	DirName  string `json:"dirName"`
-	FileName string `json:"fileName"`
+	DirName       string `json:"dirName"`
+	DirMaxSizeMB  int    `json:"dirMaxSizeMB"`
+	FileName      string `json:"fileName"`
+	FileMaxSizeMB int    `json:"fileMaxSizeMB"`
 }
 
 var Cfg Config

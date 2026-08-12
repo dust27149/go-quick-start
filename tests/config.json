@@ -1,6 +1,8 @@
 {
     "log": {
         "dirName": "logs",
-        "fileName": "app.log"
+        "dirMaxSizeMB": 3,
+        "fileName": "app.log",
+        "fileMaxSizeMB": 1
     }
 }
