@@ -6,80 +6,65 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
 	"test/config"
+	"test/logger/writer"
 )
 
 var logger *log.Logger
-var file *os.File
 
+// Init 初始化日志系统，设置日志输出目录和文件名。
 func Init(logConfig config.LogConfig) error {
-	if err := os.MkdirAll(logConfig.DirName, 0755); err != nil {
-		return err
-	}
-
-	logPath := filepath.Join(logConfig.DirName, logConfig.FileName)
-	var err error
-	file, err = os.OpenFile(
-		logPath,                             // 文件名：日志输出到当前目录下 app.log
-		os.O_CREATE|os.O_WRONLY|os.O_APPEND, // 打开方式：不存在则创建、只写、追加写入
-		0666,                                // 文件权限：rw-rw-rw-（实际权限还会受 umask 影响）
-	)
+	// 初始化日志目录和文件
+	rw, err := writer.InitWriter(logConfig)
 	if err != nil {
 		return err
 	}
 
-	writer := io.MultiWriter(os.Stdout, file) // 同时写控制台和文件
-	logger = log.New(
-		writer,                             // 输出目标：写入日志文件
-		"",                                 // 日志前缀
-		log.Ldate|log.Ltime|log.Lshortfile, // 日志格式：日期 + 时间 + 短文件名:行号
-	)
-
+	// 创建一个新的日志记录器，输出到标准输出和日志文件
+	logger = log.New(io.MultiWriter(os.Stdout, rw.CurrentFile), "", log.Ldate|log.Ltime|log.Lshortfile)
 	cfgJSON, _ := json.Marshal(logConfig)
-	Debug("配置初始化成功: %s", string(cfgJSON))
+	Debug("初始化日志模块成功: %s", string(cfgJSON))
 	return nil
 }
 
-func Close() error {
-	if file == nil {
-		return nil
-	}
-	err := file.Close()
-	file = nil
-	return err
-}
-
-func ensureInitialized() {
-	if logger == nil {
-		panic("请先调用初始化日志系统")
-	}
-}
-
+// Debug 记录调试信息日志，通常用于开发和调试阶段。
 func Debug(format string, v ...interface{}) {
 	ensureInitialized()
 	logger.Printf("DEBUG "+format, v...)
 }
 
+// Info 记录普通信息日志。
 func Info(format string, v ...interface{}) {
 	ensureInitialized()
 	logger.Printf("INFO  "+format, v...)
 }
 
+// Warn 记录警告日志，但不会退出程序。
 func Warn(format string, v ...interface{}) {
 	ensureInitialized()
 	logger.Printf("WARN  "+format, v...)
 }
 
+// Error 记录错误日志，但不会退出程序。
 func Error(format string, v ...interface{}) {
 	ensureInitialized()
 	logger.Printf("ERROR "+format, v...)
 }
 
+// Fatalf 记录致命错误日志，并关闭日志文件后退出程序。
 func Fatalf(format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
-	if file != nil {
-		_ = file.Close()
+	if logger != nil {
+		if rw, ok := logger.Writer().(*writer.RotatingWriter); ok {
+			_ = rw.Close()
+		}
 	}
 	log.Fatalf(msg)
+}
+
+// ensureInitialized 确保日志系统已经初始化，如果未初始化则抛出 panic。
+func ensureInitialized() {
+	if logger == nil {
+		panic("请先调用初始化日志系统")
+	}
 }
