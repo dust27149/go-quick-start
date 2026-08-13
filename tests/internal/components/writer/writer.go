@@ -67,19 +67,14 @@ func Init(logConfig config.LogConfig) {
 
 // DeInit 关闭日志写入器，释放资源。
 func DeInit() {
-	logger.Logger.SetOutput(os.Stdout) // 恢复全局日志记录器的输出为标准输出
-	if logWriter == nil {
-		return
-	}
 	mu.Lock()
 	defer mu.Unlock()
-
-	if logWriter.currentFile == nil {
+	// 恢复全局日志记录器的输出为标准输出
+	logger.Logger.SetOutput(os.Stdout)
+	if logWriter == nil || logWriter.currentFile == nil {
 		return
 	}
-
-	err := logWriter.currentFile.Close()
-	if err != nil {
+	if err := logWriter.currentFile.Close(); err != nil {
 		logger.Logger.Printf("日志文件关闭失败: %v", err)
 	}
 	logWriter.currentFile = nil
