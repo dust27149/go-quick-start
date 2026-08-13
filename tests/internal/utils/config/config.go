@@ -2,12 +2,12 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
 type Config struct {
-	Log LogConfig `json:"log"`
+	Log  LogConfig  `json:"log"`
+	Http HttpConfig `json:"http"`
 }
 
 type LogConfig struct {
@@ -17,10 +17,15 @@ type LogConfig struct {
 	FileMaxSizeMB int    `json:"fileMaxSizeMB"`
 }
 
+type HttpConfig struct {
+	Port           int `json:"port"`
+	TimeoutSeconds int `json:"timeoutSeconds"`
+}
+
 var Cfg Config
 
+// init 初始化配置
 func init() {
-
 	data, err := os.ReadFile("config.json")
 	if err != nil {
 		panic(err)
@@ -29,7 +34,4 @@ func init() {
 	if err := json.Unmarshal(data, &Cfg); err != nil {
 		panic(err)
 	}
-
-	cfgJSON, _ := json.Marshal(Cfg)
-	fmt.Printf("配置加载成功: %+v\n", string(cfgJSON))
 }

@@ -1,20 +1,37 @@
 package main
 
 import (
-	"test/config"
-	"test/logger"
+	"context"
+	"encoding/json"
+	"os/signal"
+	"syscall"
+	"tests/internal/components/logger"
+	"tests/internal/components/writer"
+	"tests/internal/utils/config"
 	"time"
 )
 
 func main() {
-	// 初始化config
-	cfg := config.Cfg
+	// 等待退出信号
+	runCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	if err := logger.Init(cfg.Log); err != nil {
-		panic(err)
-	}
-	for i := 1; i <= 100000; i++ {
-		logger.Debug("程序运行第 %d 次", i)
-		time.Sleep(1 * time.Millisecond)
-	}
+	// 初始化配置
+	cfg := config.Cfg
+	data, _ := json.Marshal(cfg)
+	writer.Init(cfg.Log)
+	logger.Logger.Printf("DEBUG 当前配置: %s", data)
+
+	go func() {
+		for i := 0; i < 1000000; i++ {
+			logger.Logger.Printf("DEBUG 服务正在运行...,%d\n", i)
+			time.Sleep(1 * time.Millisecond)
+		}
+	}()
+
+	// 阻塞直到收到退出信号
+	<-runCtx.Done()
+	logger.Logger.Println("DEBUG 收到退出信号，开始关闭服务...")
+	writer.DeInit()
+	logger.Logger.Println("DEBUG 服务已关闭，退出程序。")
 }

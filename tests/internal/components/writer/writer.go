@@ -2,73 +2,99 @@ package writer
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
-	"test/config"
-	"test/utils/compress"
+	"tests/internal/components/logger"
+	"tests/internal/utils/compress"
+	"tests/internal/utils/config"
 	"time"
 )
 
 const dateLayout = "2006-01-02" // 日期格式，用于按天归档日志文件
 
-var maxDirSizeBytes int64  // 日志目录大小
-var maxFileSizeBytes int64 // 单个日志文件大小
+var maxDirSizeBytes int64     // 日志目录大小
+var maxFileSizeBytes int64    // 单个日志文件大小
+var logWriter *RotatingWriter // 全局日志写入器实例
+var mu sync.Mutex             // 互斥锁，确保对 logWriter 的并发访问安全
 
 type RotatingWriter struct {
-	mu                    sync.Mutex // 互斥锁，保证并发安全
-	dirSizeExcludeLogFile int64      // 当前日志目录的大小，不含当前日志文件的大小
-	currentFile           *os.File   // 当前正在写入的日志文件
-	currentFileSize       int64      // 当前日志文件的大小
-	currentDate           string     // 当前日志文件的日期，用于按天归档
+	dirSizeExcludeLogFile int64    // 当前日志目录的大小，不含当前日志文件的大小
+	currentFile           *os.File // 当前正在写入的日志文件
+	currentFileSize       int64    // 当前日志文件的大小
+	currentDate           string   // 当前日志文件的日期，用于按天归档
 }
 
-// InitWriter 初始化日志写入器，创建日志目录和文件，并返回 RotatingWriter 实例。
-func InitWriter(logConfig config.LogConfig) (*RotatingWriter, error) {
+// Init 初始化日志写入器，创建日志目录和文件，并返回 RotatingWriter 实例。
+func Init(logConfig config.LogConfig) {
 	// 设置日志目录和文件的大小限制
 	maxDirSizeBytes = int64(logConfig.DirMaxSizeMB) * 1024 * 1024
 	maxFileSizeBytes = int64(logConfig.FileMaxSizeMB) * 1024 * 1024
 	// 创建日志目录
 	if err := os.MkdirAll(logConfig.DirName, 0755); err != nil {
-		return nil, err
+		panic(fmt.Sprintf("日志目录创建失败: %v", err))
 	}
 	// 打开或创建日志文件
 	logPath := filepath.Join(logConfig.DirName, logConfig.FileName)
 	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		return nil, err
+		panic(fmt.Sprintf("日志文件打开失败: %v", err))
 	}
 	// 获取当前日志文件的大小
 	info, err := file.Stat()
 	if err != nil {
 		file.Close()
-		return nil, err
+		panic(fmt.Sprintf("日志文件信息获取失败: %v", err))
 	}
 	dirSizeExcludeLogFile, err := calculateDirSizeExcludeLogFile(logConfig.DirName, logPath)
 	if err != nil {
 		file.Close()
-		return nil, err
+		panic(fmt.Sprintf("日志目录大小计算失败: %v", err))
 	}
 
-	return &RotatingWriter{
+	logWriter = &RotatingWriter{
 		dirSizeExcludeLogFile: dirSizeExcludeLogFile,
 		currentFile:           file,
 		currentFileSize:       info.Size(),
 		currentDate:           info.ModTime().Format(dateLayout),
-	}, nil
+	}
+	logger.Logger.SetOutput(io.MultiWriter(os.Stdout, logWriter)) // 设置全局日志记录器的输出为标准输出和日志写入器
+}
+
+// DeInit 关闭日志写入器，释放资源。
+func DeInit() {
+	logger.Logger.SetOutput(os.Stdout) // 恢复全局日志记录器的输出为标准输出
+	if logWriter == nil {
+		return
+	}
+	mu.Lock()
+	defer mu.Unlock()
+
+	if logWriter.currentFile == nil {
+		return
+	}
+
+	err := logWriter.currentFile.Close()
+	if err != nil {
+		logger.Logger.Printf("日志文件关闭失败: %v", err)
+	}
+	logWriter.currentFile = nil
+	logWriter = nil
 }
 
 // Write 实现了 io.Writer 接口，用于写入日志数据。
 func (w *RotatingWriter) Write(p []byte) (int, error) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	// 检查日志目录大小是否超过限制，如果超过则删除最旧的文件
 	if w.dirSizeExcludeLogFile+w.currentFileSize >= maxDirSizeBytes {
+		fileName := w.currentFile.Name()
 		go func() {
-			if err := deleteOldestArchiveFiles(filepath.Dir(w.currentFile.Name()), w.currentFile.Name()); err != nil {
+			if err := deleteOldestArchiveFiles(filepath.Dir(fileName), fileName); err != nil {
 				fmt.Printf("日志目录清理失败: %v\n", err)
 			}
 		}()
@@ -82,20 +108,6 @@ func (w *RotatingWriter) Write(p []byte) (int, error) {
 	n, err := w.currentFile.Write(p)
 	w.currentFileSize += int64(n)
 	return n, err
-}
-
-// Close 关闭当前日志文件。
-func (w *RotatingWriter) Close() error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	if w.currentFile == nil {
-		return nil
-	}
-
-	err := w.currentFile.Close()
-	w.currentFile = nil
-	return err
 }
 
 // compressAndCreateNewLogFile 关闭当前日志文件，压缩归档，并创建新的日志文件。

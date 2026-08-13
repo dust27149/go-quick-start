@@ -4,5 +4,9 @@
         "dirMaxSizeMB": 3,
         "fileName": "app.log",
         "fileMaxSizeMB": 1
+    },
+    "http": {
+        "port": 8080,
+        "timeoutSeconds": 10
     }
 }
