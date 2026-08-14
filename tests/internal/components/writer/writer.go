@@ -29,8 +29,11 @@ type RotatingWriter struct {
 	currentDate           string   // 当前日志文件的日期，用于按天归档
 }
 
-// Init 初始化日志写入器，创建日志目录和文件，并返回 RotatingWriter 实例。
+// Init 初始化日志写入器，创建日志目录和文件
 func Init(logConfig config.LogConfig) {
+	if logger.Logger == nil {
+		panic("全局日志记录器未初始化")
+	}
 	// 设置日志目录和文件的大小限制
 	maxDirSizeBytes = int64(logConfig.DirMaxSizeMB) * 1024 * 1024
 	maxFileSizeBytes = int64(logConfig.FileMaxSizeMB) * 1024 * 1024
