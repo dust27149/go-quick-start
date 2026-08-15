@@ -22,7 +22,7 @@ func main() {
 	cfg := config.Cfg
 	data, _ := json.Marshal(cfg)
 	writer.Init(cfg.Log)
-	logger.Logger.Printf("DEBUG 当前配置: %s", data)
+	logger.Debug("当前配置: %+v", string(data))
 	// 初始化HTTP客户端和服务
 	https.Init(cfg.Http)
 	// 注册API路由
@@ -31,7 +31,7 @@ func main() {
 	go func() {
 		i := 0
 		for {
-			logger.Logger.Printf("DEBUG 服务正在运行...,%d\n", i)
+			logger.Debug("服务正在运行...,%d", i)
 			i++
 			time.Sleep(1000 * time.Millisecond)
 		}
@@ -39,8 +39,8 @@ func main() {
 
 	// 阻塞直到收到退出信号
 	<-runCtx.Done()
-	logger.Logger.Println("DEBUG 收到退出信号，开始关闭服务...")
+	logger.Debug("收到退出信号，开始关闭服务...")
 	https.DeInit()
 	writer.DeInit()
-	logger.Logger.Println("DEBUG 服务已关闭，退出程序。")
+	logger.Debug("服务已关闭，退出程序。")
 }

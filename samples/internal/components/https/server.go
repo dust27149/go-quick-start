@@ -28,7 +28,7 @@ func startServer(cfg config.HttpConfig) {
 	}
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Logger.Printf("ERROR API 服务启动失败: %v\n", err)
+			logger.Error("API 服务启动失败: %v", err)
 		}
 	}()
 }
