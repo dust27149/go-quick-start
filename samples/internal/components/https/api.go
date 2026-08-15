@@ -7,8 +7,8 @@ import (
 
 // registerBasicApi 注册API路由
 func registerBasicApi() {
-	RegisterRoute("GET", "/health", getHealthHandler)
-	RegisterRoute("POST", "/health", postHealthHandler)
+	RegisterRoute(http.MethodGet, "/health", getHealthHandler)
+	RegisterRoute(http.MethodPost, "/health", postHealthHandler)
 }
 
 // getHealthHandler 处理 GET /health 路由的请求

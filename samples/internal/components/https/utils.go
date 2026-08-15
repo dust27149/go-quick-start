@@ -34,6 +34,14 @@ func ReadRequestBody(r *http.Request) (map[string]interface{}, error) {
 	return requestBody, nil
 }
 
+// ReadRequestBodyToStruct 从请求体中读取 JSON 数据并解析为指定的结构体
+func ReadRequestBodyToStruct(r *http.Request, v any) error {
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		return err
+	}
+	return nil
+}
+
 // WriteResponse 返回响应给客户端
 func WriteResponse(w http.ResponseWriter, code int, resp any) {
 	w.Header().Set("Content-Type", "application/json")

@@ -18,11 +18,12 @@ func main() {
 	runCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	// 初始化配置
+	// 读取配置
 	cfg := config.Cfg
 	data, _ := json.Marshal(cfg)
-	writer.Init(cfg.Log)
 	logger.Debug("当前配置: %+v", string(data))
+	// 初始化日志
+	writer.Init(cfg.Log)
 	// 初始化HTTP客户端和服务
 	https.Init(cfg.Http)
 	// 注册API路由

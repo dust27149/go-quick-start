@@ -38,8 +38,16 @@ func Get[T any](requestUrl string, header map[string]string, resp *T) error {
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Post[T any](requestUrl string, body io.Reader, header map[string]string, resp *T) error {
-	return request(http.MethodPost, requestUrl, body, header, resp)
+func Post[T any](requestUrl string, body any, header map[string]string, resp *T) error {
+	data, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	if header == nil {
+		header = make(map[string]string)
+	}
+	header["Content-Type"] = "application/json"
+	return request(http.MethodPost, requestUrl, bytes.NewReader(data), header, resp)
 }
 
 // PostForm 发送POST请求，使用application/x-www-form-urlencoded格式
@@ -104,8 +112,16 @@ func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, heade
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Put[T any](requestUrl string, body io.Reader, header map[string]string, resp *T) error {
-	return request(http.MethodPut, requestUrl, body, header, resp)
+func Put[T any](requestUrl string, body any, header map[string]string, resp *T) error {
+	data, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	if header == nil {
+		header = make(map[string]string)
+	}
+	header["Content-Type"] = "application/json"
+	return request(http.MethodPut, requestUrl, bytes.NewReader(data), header, resp)
 }
 
 // Delete 发送DELETE请求
