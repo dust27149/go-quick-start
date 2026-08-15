@@ -1,11 +1,16 @@
 package https
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"net/url"
+	"os"
 	"samples/internal/utils/config"
+	"strings"
 	"time"
 )
 
@@ -19,52 +24,108 @@ func initHttpClient(cfg config.HttpConfig) {
 }
 
 // Get 发送GET请求
-// url: 请求的URL
+// requestUrl: 请求的URL
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Get[T any](url string, header map[string]string, resp *T) error {
-	return request("GET", url, nil, header, resp)
+func Get[T any](requestUrl string, header map[string]string, resp *T) error {
+	return request(http.MethodGet, requestUrl, nil, header, resp)
 }
 
 // Post 发送POST请求
-// url: 请求的URL
+// requestUrl: 请求的URL
 // body: 请求体，传入一个io.Reader类型的变量，用于发送请求数据
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Post[T any](url string, body io.Reader, header map[string]string, resp *T) error {
-	return request("POST", url, body, header, resp)
+func Post[T any](requestUrl string, body io.Reader, header map[string]string, resp *T) error {
+	return request(http.MethodPost, requestUrl, body, header, resp)
+}
+
+// PostForm 发送POST请求，使用application/x-www-form-urlencoded格式
+// requestUrl: 请求的URL
+// formData: 表单数据，传入一个map[string]string类型的变量，用于发送表单数据
+// header: 请求头
+// resp: 响应体，传入一个指针类型的变量，用于接收响应数据
+// 返回值: error，表示请求是否成功
+func PostForm[T any](requestUrl string, formData, header map[string]string, resp *T) error {
+	form := url.Values{}
+	for key, value := range formData {
+		form.Set(key, value)
+	}
+	if header == nil {
+		header = make(map[string]string)
+	}
+	header["Content-Type"] = "application/x-www-form-urlencoded"
+	return request(http.MethodPost, requestUrl, strings.NewReader(form.Encode()), header, resp)
+}
+
+// PostFile 发送POST请求，使用multipart/form-data格式上传文件
+// requestUrl: 请求的URL
+// fileFieldName: 文件字段名
+// filePath: 文件路径
+// formData: 表单数据，传入一个map[string]string类型的变量，用于发送表单数据
+// header: 请求头
+// resp: 响应体，传入一个指针类型的变量，用于接收响应数据
+// 返回值: error，表示请求是否成功
+func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, header map[string]string, resp *T) error {
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	// 文本字段
+	for key, value := range formData {
+		_ = writer.WriteField(key, value)
+	}
+
+	// 文件字段
+	fileWriter, err := writer.CreateFormFile(fileFieldName, filePath)
+	if err != nil {
+		panic(err)
+	}
+	f, err := os.Open(filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	_, _ = io.Copy(fileWriter, f)
+
+	_ = writer.Close()
+
+	if header == nil {
+		header = make(map[string]string)
+	}
+	header["Content-Type"] = writer.FormDataContentType()
+	return request(http.MethodPost, requestUrl, &buf, header, resp)
 }
 
 // Put 发送PUT请求
-// url: 请求的URL
+// requestUrl: 请求的URL
 // body: 请求体，传入一个io.Reader类型的变量，用于发送请求数据
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Put[T any](url string, body io.Reader, header map[string]string, resp *T) error {
-	return request("PUT", url, body, header, resp)
+func Put[T any](requestUrl string, body io.Reader, header map[string]string, resp *T) error {
+	return request(http.MethodPut, requestUrl, body, header, resp)
 }
 
 // Delete 发送DELETE请求
-// url: 请求的URL
+// requestUrl: 请求的URL
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Delete[T any](url string, header map[string]string, resp *T) error {
-	return request("DELETE", url, nil, header, resp)
+func Delete[T any](requestUrl string, header map[string]string, resp *T) error {
+	return request(http.MethodDelete, requestUrl, nil, header, resp)
 }
 
 // request 发送HTTP请求
 // method: 请求方法，如GET、POST、PUT、DELETE等
-// url: 请求的URL
+// requestUrl: 请求的URL
 // body: 请求体，传入一个io.Reader类型的变量，用于发送请求数据
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func request[T any](method, url string, body io.Reader, header map[string]string, resp *T) error {
-	req, err := http.NewRequest(method, url, body)
+func request[T any](method, requestUrl string, body io.Reader, header map[string]string, resp *T) error {
+	req, err := http.NewRequest(method, requestUrl, body)
 	if err != nil {
 		return err
 	}
