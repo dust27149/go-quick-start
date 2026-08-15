@@ -35,7 +35,7 @@ func ReadRequestBody(r *http.Request) (map[string]interface{}, error) {
 }
 
 // WriteResponse 返回响应给客户端
-func WriteResponse(w http.ResponseWriter, code int, resp Response) {
+func WriteResponse(w http.ResponseWriter, code int, resp any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(resp); err != nil {

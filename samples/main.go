@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"os/signal"
+	"samples/internal/components/https"
+	"samples/internal/components/logger"
+	"samples/internal/components/writer"
+	"samples/internal/utils/config"
+	"samples/modules/api"
 	"syscall"
-	"tests/internal/components/https"
-	"tests/internal/components/logger"
-	"tests/internal/components/writer"
-	"tests/internal/utils/config"
 	"time"
 )
 
@@ -24,6 +25,8 @@ func main() {
 	logger.Logger.Printf("DEBUG 当前配置: %s", data)
 	// 初始化HTTP客户端和服务
 	https.Init(cfg.Http)
+	// 注册API路由
+	api.Register()
 
 	go func() {
 		i := 0

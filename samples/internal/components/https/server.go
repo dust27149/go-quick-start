@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"tests/internal/components/logger"
-	"tests/internal/utils/config"
+	"samples/internal/components/logger"
+	"samples/internal/utils/config"
 )
 
 // registerRoutes 注册路由

@@ -3,7 +3,7 @@ package https
 import (
 	"net/http"
 	"sync"
-	"tests/internal/utils/config"
+	"samples/internal/utils/config"
 )
 
 var mu sync.Mutex       // 互斥锁，确保并发访问安全

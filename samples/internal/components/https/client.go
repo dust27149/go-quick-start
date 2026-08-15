@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"tests/internal/utils/config"
+	"samples/internal/utils/config"
 	"time"
 )
 

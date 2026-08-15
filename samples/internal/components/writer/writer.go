@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"tests/internal/components/logger"
-	"tests/internal/utils/compress"
-	"tests/internal/utils/config"
+	"samples/internal/components/logger"
+	"samples/internal/utils/compress"
+	"samples/internal/utils/config"
 	"time"
 )
 
