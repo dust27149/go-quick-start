@@ -34,7 +34,7 @@ func Get[T any](requestUrl string, header map[string]string, resp *T) error {
 
 // Post 发送POST请求
 // requestUrl: 请求的URL
-// body: 请求体，传入一个io.Reader类型的变量，用于发送请求数据
+// body: 请求体
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
@@ -108,7 +108,7 @@ func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, heade
 
 // Put 发送PUT请求
 // requestUrl: 请求的URL
-// body: 请求体，传入一个io.Reader类型的变量，用于发送请求数据
+// body: 请求体
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
