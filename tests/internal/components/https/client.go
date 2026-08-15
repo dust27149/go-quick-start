@@ -1,35 +1,20 @@
-package requests
+package https
 
 import (
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
-	"sync"
 	"tests/internal/utils/config"
 	"time"
 )
 
-var client *http.Client // 定义一个全局的HTTP客户端，统一设置超时时间等参数
-var mu sync.Mutex       // 互斥锁，确保对 httpClient 的并发访问安全
-
-// Init 初始化HTTP客户端
-func Init(cfg config.HttpConfig) {
+// initHttpClient 初始化HTTP客户端
+func initHttpClient(cfg config.HttpConfig) {
 	mu.Lock()
 	defer mu.Unlock()
-
 	client = &http.Client{
 		Timeout: time.Duration(cfg.TimeoutSeconds) * time.Second,
-	}
-}
-
-// DeInit 关闭HTTP客户端，释放资源
-func DeInit() {
-	mu.Lock()
-	defer mu.Unlock()
-	if client != nil {
-		client.CloseIdleConnections()
-		client = nil
 	}
 }
 
