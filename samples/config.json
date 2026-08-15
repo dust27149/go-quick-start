@@ -1,4 +1,5 @@
 {
+    "externalConfigPath": "",
     "log": {
         "dirName": "logs",
         "dirMaxSizeMB": 3,

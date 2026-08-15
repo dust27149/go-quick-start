@@ -5,13 +5,13 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"samples/internal/components/logger"
+	"samples/internal/utils/compress"
+	"samples/internal/utils/config"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
-	"tests/internal/components/logger"
-	"tests/internal/utils/compress"
-	"tests/internal/utils/config"
 	"time"
 )
 
@@ -29,8 +29,11 @@ type RotatingWriter struct {
 	currentDate           string   // 当前日志文件的日期，用于按天归档
 }
 
-// Init 初始化日志写入器，创建日志目录和文件，并返回 RotatingWriter 实例。
+// Init 初始化日志写入器，创建日志目录和文件
 func Init(logConfig config.LogConfig) {
+	if logger.Logger == nil {
+		panic("全局日志记录器未初始化")
+	}
 	// 设置日志目录和文件的大小限制
 	maxDirSizeBytes = int64(logConfig.DirMaxSizeMB) * 1024 * 1024
 	maxFileSizeBytes = int64(logConfig.FileMaxSizeMB) * 1024 * 1024
@@ -62,7 +65,7 @@ func Init(logConfig config.LogConfig) {
 		currentFileSize:       info.Size(),
 		currentDate:           info.ModTime().Format(dateLayout),
 	}
-	logger.Logger.SetOutput(io.MultiWriter(os.Stdout, logWriter)) // 设置全局日志记录器的输出为标准输出和日志写入器
+	logger.SetOutput(io.MultiWriter(os.Stdout, logWriter)) // 设置全局日志记录器的输出为标准输出和日志写入器
 }
 
 // DeInit 关闭日志写入器，释放资源。
@@ -70,12 +73,12 @@ func DeInit() {
 	mu.Lock()
 	defer mu.Unlock()
 	// 恢复全局日志记录器的输出为标准输出
-	logger.Logger.SetOutput(os.Stdout)
+	logger.SetOutput(os.Stdout)
 	if logWriter == nil || logWriter.currentFile == nil {
 		return
 	}
 	if err := logWriter.currentFile.Close(); err != nil {
-		logger.Logger.Printf("日志文件关闭失败: %v", err)
+		logger.Error("日志文件关闭失败: %v", err)
 	}
 	logWriter.currentFile = nil
 	logWriter = nil
