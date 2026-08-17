@@ -19,5 +19,5 @@ services:
     volumes:
       - ${HOST_CONFIG_PATH:-./config.json}:/app/config.json:ro # 未设置 HOST_CONFIG_PATH 时使用 samples 下默认 config.json
       - ${HOST_LOGS_PATH}:/app/logs # 挂载日志目录
-      - ${HOST_DATA_PATH}:/app/data # 挂载数据目录
+      - ${HOST_DATA_PATH}:/data # 挂载data数据目录
     restart: unless-stopped # 设置容器重启策略
