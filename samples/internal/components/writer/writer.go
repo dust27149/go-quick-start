@@ -108,7 +108,7 @@ func (w *RotatingWriter) Write(p []byte) (int, error) {
 	return n, err
 }
 
-// compressAndCreateNewLogFile 关闭当前日志文件，压缩归档，并创建新的日志文件。
+// archiveLogFile 关闭当前日志文件，压缩归档，并创建新的日志文件。
 func (w *RotatingWriter) archiveLogFile() error {
 	// 关闭当前日志文件
 	if err := w.currentFile.Close(); err != nil {

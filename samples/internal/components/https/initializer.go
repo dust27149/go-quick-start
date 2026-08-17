@@ -11,7 +11,7 @@ var client *http.Client // 定义一个全局的HTTP客户端，统一设置超�
 var server *http.Server // 定义一个全局的HTTP服务实例
 var mux *http.ServeMux  // 定义一个全局的HTTP请求多路复用器
 
-// Init 初始化HTTP客户端
+// Init 初始化HTTP客户端和服务
 func Init(cfg config.HttpConfig) {
 	// 初始化HTTP客户端
 	initHttpClient(cfg)
@@ -21,7 +21,7 @@ func Init(cfg config.HttpConfig) {
 	registerBasicApi()
 }
 
-// DeInit 关闭HTTP客户端，释放资源
+// DeInit 关闭HTTP客户端和服务，释放资源
 func DeInit() {
 	mu.Lock()
 	defer mu.Unlock()

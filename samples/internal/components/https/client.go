@@ -88,11 +88,11 @@ func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, heade
 	// 文件字段
 	fileWriter, err := writer.CreateFormFile(fileFieldName, filePath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	f, err := os.Open(filePath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer f.Close()
 	_, _ = io.Copy(fileWriter, f)

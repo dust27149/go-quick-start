@@ -8,7 +8,7 @@ import (
 	"samples/internal/utils/config"
 )
 
-// registerRoutes 注册路由
+// RegisterRoute 注册路由
 func RegisterRoute(method, path string, handler http.HandlerFunc) {
 	mux.HandleFunc(fmt.Sprintf("%s %s", method, path), handler)
 }
