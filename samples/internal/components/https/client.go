@@ -28,7 +28,7 @@ func initHttpClient(cfg config.HttpConfig) {
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Get[T any](requestUrl string, header map[string]string, resp *T) error {
+func Get[T any](requestUrl string, header map[string]string, resp *T) (int, error) {
 	return request(http.MethodGet, requestUrl, nil, header, resp)
 }
 
@@ -38,10 +38,10 @@ func Get[T any](requestUrl string, header map[string]string, resp *T) error {
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Post[T any](requestUrl string, body any, header map[string]string, resp *T) error {
+func Post[T any](requestUrl string, body any, header map[string]string, resp *T) (int, error) {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
 	if header == nil {
 		header = make(map[string]string)
@@ -56,7 +56,7 @@ func Post[T any](requestUrl string, body any, header map[string]string, resp *T)
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func PostForm[T any](requestUrl string, formData, header map[string]string, resp *T) error {
+func PostForm[T any](requestUrl string, formData, header map[string]string, resp *T) (int, error) {
 	form := url.Values{}
 	for key, value := range formData {
 		form.Set(key, value)
@@ -76,7 +76,7 @@ func PostForm[T any](requestUrl string, formData, header map[string]string, resp
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, header map[string]string, resp *T) error {
+func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, header map[string]string, resp *T) (int, error) {
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 
@@ -88,11 +88,11 @@ func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, heade
 	// 文件字段
 	fileWriter, err := writer.CreateFormFile(fileFieldName, filePath)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
 	f, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
 	defer f.Close()
 	_, _ = io.Copy(fileWriter, f)
@@ -112,10 +112,10 @@ func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, heade
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Put[T any](requestUrl string, body any, header map[string]string, resp *T) error {
+func Put[T any](requestUrl string, body any, header map[string]string, resp *T) (int, error) {
 	data, err := json.Marshal(body)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
 	if header == nil {
 		header = make(map[string]string)
@@ -129,7 +129,7 @@ func Put[T any](requestUrl string, body any, header map[string]string, resp *T) 
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func Delete[T any](requestUrl string, header map[string]string, resp *T) error {
+func Delete[T any](requestUrl string, header map[string]string, resp *T) (int, error) {
 	return request(http.MethodDelete, requestUrl, nil, header, resp)
 }
 
@@ -140,21 +140,21 @@ func Delete[T any](requestUrl string, header map[string]string, resp *T) error {
 // header: 请求头
 // resp: 响应体，传入一个指针类型的变量，用于接收响应数据
 // 返回值: error，表示请求是否成功
-func request[T any](method, requestUrl string, body io.Reader, header map[string]string, resp *T) error {
+func request[T any](method, requestUrl string, body io.Reader, header map[string]string, resp *T) (int, error) {
 	req, err := http.NewRequest(method, requestUrl, body)
 	if err != nil {
-		return err
+		return http.StatusInternalServerError, err
 	}
 	for k, v := range header {
 		req.Header.Set(k, v)
 	}
 	if client == nil {
-		return errors.New("HTTP客户端未初始化")
+		return http.StatusInternalServerError, errors.New("HTTP客户端未初始化")
 	}
 	httpResp, err := client.Do(req)
 	if err != nil {
-		return err
+		return httpResp.StatusCode, err
 	}
 	defer httpResp.Body.Close()
-	return json.NewDecoder(httpResp.Body).Decode(resp)
+	return httpResp.StatusCode, json.NewDecoder(httpResp.Body).Decode(resp)
 }
