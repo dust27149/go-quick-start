@@ -33,9 +33,9 @@ RUN addgroup -S app && adduser -S app -G app
 COPY --from=builder /out/app /app/app
 COPY config.json /app/config.json
 # 预创建日志目录并授予应用用户权限
-RUN mkdir -p /app/logs && chown -R app:app /app
+RUN mkdir -p /app/logs /data && chown -R app:app /app /data
 
-# 使用 root 用户运行服务
+# 使用 root 用户运行服务（兼容宿主机挂载目录权限）
 USER root
 # 对外暴露服务端口
 EXPOSE 8080

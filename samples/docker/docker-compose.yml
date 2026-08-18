@@ -4,9 +4,9 @@ services:
     container_name: ${CONTAINER_NAME}
     build:
       # 构建上下文和 Dockerfile 路径
-      context: .
+      context: ..
       # Dockerfile 路径
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
       # 构建参数
       args:
         GO_VERSION: ${GO_VERSION} # 指定 Go 版本
@@ -17,7 +17,7 @@ services:
     ports:
       - "${HOST_PORT}:${CONTAINER_PORT}" # 映射容器端口到主机端口
     volumes:
-      - ${HOST_CONFIG_PATH:-./config.json}:/app/config.json:ro # 未设置 HOST_CONFIG_PATH 时使用 samples 下默认 config.json
+      - ${HOST_CONFIG_PATH:-../config.json}:/app/config.json:ro # 未设置 HOST_CONFIG_PATH 时使用 samples 下默认 config.json
       - ${HOST_LOGS_PATH}:/app/logs # 挂载日志目录
       - ${HOST_DATA_PATH}:/data # 挂载data数据目录
     restart: unless-stopped # 设置容器重启策略
