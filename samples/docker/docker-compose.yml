@@ -10,6 +10,7 @@ services:
       # 构建参数
       args:
         GO_VERSION: ${GO_VERSION} # 指定 Go 版本
+        GOPROXY: ${GOPROXY:-https://goproxy.cn,direct} # 指定 Go 模块代理
         TARGETOS: ${TARGETOS} # 指定目标操作系统
         TARGETARCH: ${TARGETARCH} # 指定目标架构
     # 使用最新的镜像

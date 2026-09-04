@@ -15,6 +15,7 @@ RUN go mod download
 COPY . .
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
+ARG GOPROXY=https://goproxy.cn,direct
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w" -o /out/app .
 
 # 第二阶段：最小运行时镜像，仅携带运行所需文件
