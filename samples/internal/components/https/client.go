@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"samples/internal/components/logger"
 	"samples/internal/utils/config"
 	"strings"
 	"time"
@@ -47,7 +48,7 @@ func Post[T any](requestUrl string, body any, header map[string]string, resp *T)
 		header = make(map[string]string)
 	}
 	header["Content-Type"] = "application/json"
-	return request(http.MethodPost, requestUrl, bytes.NewReader(data), header, resp)
+	return request(http.MethodPost, requestUrl, strings.NewReader(string(data)), header, resp)
 }
 
 // PostForm 发送POST请求，使用application/x-www-form-urlencoded格式
@@ -151,10 +152,20 @@ func request[T any](method, requestUrl string, body io.Reader, header map[string
 	if client == nil {
 		return http.StatusInternalServerError, errors.New("HTTP客户端未初始化")
 	}
+	if body, ok := body.(*strings.Reader); ok {
+		logger.Debug("发送HTTP请求: %s %s, 请求头: %v, 请求体: %s\n", method, requestUrl, header, body)
+	} else {
+		logger.Debug("发送HTTP请求: %s %s, 请求头: %v", method, requestUrl, header)
+	}
 	httpResp, err := client.Do(req)
 	if err != nil {
 		return httpResp.StatusCode, err
 	}
 	defer httpResp.Body.Close()
-	return httpResp.StatusCode, json.NewDecoder(httpResp.Body).Decode(resp)
+	err = json.NewDecoder(httpResp.Body).Decode(resp)
+	if err != nil {
+		return httpResp.StatusCode, err
+	}
+	logger.Debug("接收HTTP响应: %s %s, 状态码: %d, 响应体: %v\n", method, requestUrl, httpResp.StatusCode, resp)
+	return httpResp.StatusCode, nil
 }
