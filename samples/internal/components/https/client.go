@@ -87,7 +87,8 @@ func PostFile[T any](requestUrl, fileFieldName, filePath string, formData, heade
 	}
 
 	// 文件字段
-	fileWriter, err := writer.CreateFormFile(fileFieldName, filePath)
+	filePaths := strings.Split(filePath, "/")
+	fileWriter, err := writer.CreateFormFile(fileFieldName, filePaths[len(filePaths)-1])
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
@@ -153,9 +154,11 @@ func request[T any](method, requestUrl string, body io.Reader, header map[string
 		return http.StatusInternalServerError, errors.New("HTTP客户端未初始化")
 	}
 	if body, ok := body.(*strings.Reader); ok {
-		logger.Debug("发送HTTP请求: %s %s, 请求头: %v, 请求体: %s\n", method, requestUrl, header, body)
+		data := make([]byte, body.Size())
+		_, _ = body.ReadAt(data, 0)
+		logger.Debug("发送HTTP请求: %s %s, 请求体: %s\n", method, requestUrl, string(data))
 	} else {
-		logger.Debug("发送HTTP请求: %s %s, 请求头: %v", method, requestUrl, header)
+		logger.Debug("发送HTTP请求: %s %s\n", method, requestUrl)
 	}
 	httpResp, err := client.Do(req)
 	if err != nil {
@@ -166,6 +169,7 @@ func request[T any](method, requestUrl string, body io.Reader, header map[string
 	if err != nil {
 		return httpResp.StatusCode, err
 	}
-	logger.Debug("接收HTTP响应: %s %s, 状态码: %d, 响应体: %v\n", method, requestUrl, httpResp.StatusCode, resp)
+	respData, _ := json.Marshal(resp)
+	logger.Debug("接收HTTP响应: %s %s, 状态码: %d, 响应体: %s\n", method, requestUrl, httpResp.StatusCode, string(respData))
 	return httpResp.StatusCode, nil
 }
